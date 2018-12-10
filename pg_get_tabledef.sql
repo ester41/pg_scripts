@@ -170,17 +170,17 @@ begin
       select
         pn.nspname as schema_name
         , pc.relname as table_name
-        , obj_description(pc.oid) as table_comment
+        , pg_catalog.obj_description(pc.oid) as table_comment
         , 0 as positon 
       from
-        pg_class pc 
-        inner join pg_namespace pn 
+        pg_catalog.pg_class pc 
+        inner join pg_catalog.pg_namespace pn 
           on pn.oid = pc.relnamespace 
         inner join check_data cd 
           on pn.nspname = cd.schema_name 
           and pc.relname = cd.table_name 
       where
-        obj_description(pc.oid) is not null
+        pg_catalog.obj_description(pc.oid) is not null
     ) 
     , column_data( 
       schema_name
@@ -193,20 +193,20 @@ begin
         cd.schema_name
         , cd.table_name
         , pa.attname as column_name
-        , col_description(pc.oid, pa.attnum) as column_comment
+        , pg_catalog.col_description(pc.oid, pa.attnum) as column_comment
         , pa.attnum as positon 
       from
-        pg_attribute pa 
-        inner join pg_class pc 
+        pg_catalog.pg_attribute pa 
+        inner join pg_catalog.pg_class pc 
           on pc.oid = pa.attrelid 
-        inner join pg_namespace pn 
+        inner join pg_catalog.pg_namespace pn 
           on pn.oid = pc.relnamespace 
         inner join check_data cd 
           on pn.nspname = cd.schema_name 
           and pc.relname = cd.table_name 
       where
         pa.attnum > 0 
-        and col_description(pc.oid, pa.attnum) is not null 
+        and pg_catalog.col_description(pc.oid, pa.attnum) is not null 
       order by
         pa.attnum
     ) 
