@@ -35,8 +35,8 @@ begin
   if table_check is not null then
 
     -- 定義作成
-    res := 'DROP TABLE IF EXISTS ' || table_name || ' CASCADE;' || chr(10);
-    res := res || 'CREATE TABLE ' || table_name || '(' || chr(10);
+    res := 'DROP TABLE IF EXISTS ' || schema_name || '.' || table_name || ' CASCADE;' || chr(10);
+    res := res || 'CREATE TABLE ' || schema_name || '.' || table_name || ' (' || chr(10);
 
     for rec in
       select
