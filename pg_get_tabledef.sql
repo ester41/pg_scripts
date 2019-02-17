@@ -8,6 +8,9 @@ declare res text := '-- テーブルが見つかりません';
 declare table_check integer;
 declare rec record;
 declare idx_str text := '';
+declare owr_str text := '';
+declare usename text := '';
+declare grt_str text := '';
 declare com_str text := '';
 declare comma_flg boolean := false;
 begin
@@ -160,6 +163,42 @@ begin
     -- インデックス部分追加
     res := res || ');' || chr(10) || idx_str || chr(10);
 
+    -- 所有者変更部分作成
+    select
+        'ALTER TABLE ' ||  pn.nspname || '.' || pc.relname || ' OWNER TO ' || pu.usename || ';' || chr(10) 
+        , pu.usename into owr_str, usename
+    from
+        pg_catalog.pg_class pc 
+        inner join pg_catalog.pg_namespace pn 
+            on pn.oid = pc.relnamespace 
+        inner join pg_catalog.pg_user pu 
+            on pc.relowner = pu.usesysid 
+    where
+        pn.nspname = schema_name 
+        and pc.relname = table_name; 
+    res := res || owr_str;
+
+    -- 権限変更部分作成
+    res := res || 'REVOKE ALL PRIVILEGES ON ' || schema_name || '.' || table_name || ' FROM ' || usename || ';' || chr(10);
+    select
+    array_to_string( 
+        array ( 
+            select
+                'GRANT ' || tp.privilege_type || ' ON ' || tp.table_schema || '.' || tp.table_name || ' TO ' || tp.grantee
+                 || ';' 
+            from
+                information_schema.table_privileges tp 
+            where
+                tp.table_schema = 'ccs' 
+                and tp.table_name = 'accountinfo' 
+            order by
+                tp.grantee
+                , tp.privilege_type
+        ) 
+        , chr(10)
+    ) into grt_str;
+    res := res || grt_str || chr(10);
+
     -- コメント部分作成
     with check_data(schema_name, table_name) as ( 
       select
@@ -218,13 +257,13 @@ begin
           from
             ( 
               select
-                'COMMENT ON TABLE ' || td.table_name || ' IS ''' || td.table_comment || ''';' as str
+                'COMMENT ON TABLE ' || td.schema_name || '.' || td.table_name || ' IS ''' || td.table_comment || ''';' as str
                 , td.positon 
               from
                 table_data td 
               union 
               select
-                'COMMENT ON COLUMN ' || cd.table_name || '.' || cd.column_name || ' IS ''' || cd.column_comment || ''';'
+                'COMMENT ON COLUMN ' || cd.schema_name || '.' || cd.table_name || '.' || cd.column_name || ' IS ''' || cd.column_comment || ''';'
                  as str
                 , cd.positon 
               from
