@@ -189,8 +189,8 @@ begin
             from
                 information_schema.table_privileges tp 
             where
-                tp.table_schema = 'ccs' 
-                and tp.table_name = 'accountinfo' 
+                tp.table_schema = $1
+                and tp.table_name = $2
             order by
                 tp.grantee
                 , tp.privilege_type
