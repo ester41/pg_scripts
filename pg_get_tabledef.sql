@@ -73,6 +73,7 @@ begin
         pn.nspname = schema_name 
         and pc.relname = table_name 
         and pa.attnum > 0
+        and not pa.attisdropped
       order by attnum
     loop
 
